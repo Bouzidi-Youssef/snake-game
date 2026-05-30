@@ -38,12 +38,40 @@ body {
   justify-content: center;
 }
 
-/* ── Outer page wrapper — always centers the container ── */
+/* ── Outer page wrapper ─────────────────────────────────
+   Always fills the viewport and centers its single child.
+   The child (.game-screen) is transform-scaled on small
+   screens, so #app just needs to flex-center it.        */
 #app {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ── Scale wrapper ──────────────────────────────────────
+   .game-screen holds the fixed-size container + HUD strip.
+   On small viewports we scale the whole group down via
+   transform: scale(). transform-origin: top center means
+   the top-edge stays anchored while the element shrinks
+   toward the center horizontally.
+
+   --scale and --scale-mb are injected as inline style on
+   .game-screen by renderer.js (computed from window size)
+   so the scale is always exact without needing JS to also
+   touch the DOM at every frame.                          */
+.game-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: center center;
+  transform: scale(var(--scale, 1));
+  /* Negative margin collapses the whitespace that the
+     un-scaled layout box would otherwise occupy.        */
+  margin-top:    var(--scale-margin-v, 0px);
+  margin-bottom: var(--scale-margin-v, 0px);
 }
 
 /* ── The one fixed container ────────────────────── */
@@ -94,11 +122,7 @@ body {
   z-index: 1;
 }
 
-.game-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+/* .game-screen defined above with scale logic */
 
 .hud-spacer {
   height: 36px;
