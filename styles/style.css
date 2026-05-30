@@ -65,6 +65,35 @@ body {
   margin-bottom: 20px;
 }
 
+/* Radial vignette: bright #aacc66 center fading to base green at edges.
+   3-cell (84px) shadow zone from every edge.
+   Ellipse axes: 71% wide × 60% tall of the container covers the inner bright area.
+   Pointer-events: none so it never blocks clicks. */
+.snake-game-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 71% 60% at 50% 50%,
+    #aacc66 0%,
+    #aacc66 40%,
+    #9bba5a 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Everything inside the container must sit above the vignette */
+.snake-game-container > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Game board and its overlay sit above vignette too */
+.game-board {
+  z-index: 1;
+}
+
 .game-screen {
   display: flex;
   flex-direction: column;
@@ -274,6 +303,7 @@ body {
   width:  var(--board-w);
   height: var(--board-h);
   overflow: hidden;
+  z-index: 1;
 }
 
 /* ── Snake segments ──────────────────────────────── */
