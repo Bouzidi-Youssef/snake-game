@@ -12,7 +12,7 @@ export function initTouch(container) {
 
   container.addEventListener("touchstart", (e) => {
     const state = getState();
-    if (state.screen !== SCREENS.GAME || state.status === GAME_STATUS.GAMEOVER) return;
+    if (state.screen !== SCREENS.GAME || state.status === GAME_STATUS.GAMEOVER || state.status === GAME_STATUS.STAGE_COMPLETE) return;
 
     tracking = true;
     const t = e.touches[0];

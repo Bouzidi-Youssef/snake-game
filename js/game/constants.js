@@ -17,6 +17,7 @@ export const GAME_STATUS = {
   RUNNING: "running",
   PAUSED: "paused",
   GAMEOVER: "gameover",
+  STAGE_COMPLETE: "stage_complete",
 };
 
 export const SCREENS = {

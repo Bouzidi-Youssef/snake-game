@@ -1,5 +1,6 @@
 import { createInitialState } from "./state.js";
-import { SCREENS, GAME_STATUS, DIRECTIONS, DEFAULTS, DIFFICULTIES } from "./constants.js";
+import { SCREENS, GAME_STATUS, DIRECTIONS, DEFAULTS, DIFFICULTIES, MODES } from "./constants.js";
+import { parseWallMap } from "./stage-loader.js";
 
 let state = createInitialState();
 let listeners = [];
@@ -20,6 +21,45 @@ export const resetGame = (difficulty) => {
     highScore: prev.highScore,
     difficulty: difficulty || null,
     tickRate,
+  };
+  notify();
+};
+
+export const loadStage = (stageIndex, stageConfig) => {
+  const prev = state;
+  const walls = parseWallMap(stageConfig.walls);
+  const snake = [
+    { x: stageConfig.snakeStart.x, y: stageConfig.snakeStart.y },
+    { x: stageConfig.snakeStart.x - 1, y: stageConfig.snakeStart.y },
+    { x: stageConfig.snakeStart.x - 2, y: stageConfig.snakeStart.y },
+  ];
+
+  const base = createInitialState();
+  let food = base.food;
+  while (
+    walls.some(w => w.x === food.x && w.y === food.y) ||
+    snake.some(s => s.x === food.x && s.y === food.y)
+  ) {
+    food = {
+      x: Math.floor(Math.random() * DEFAULTS.COLS),
+      y: Math.floor(Math.random() * DEFAULTS.ROWS),
+    };
+  }
+
+  state = {
+    ...base,
+    screen: SCREENS.GAME,
+    status: GAME_STATUS.RUNNING,
+    mode: MODES.STAGE,
+    stageIndex,
+    foodTarget: stageConfig.foodTarget,
+    tickRate: stageConfig.tickRate,
+    food,
+    world: { wrapEdges: stageConfig.wrapEdges, walls },
+    snake,
+    direction: DIRECTIONS.RIGHT,
+    nextDirection: [DIRECTIONS.RIGHT],
+    highScore: prev.highScore,
   };
   notify();
 };

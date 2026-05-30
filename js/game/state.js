@@ -14,6 +14,9 @@ export const createInitialState = () => {
 
     mode: MODES.CLASSIC,
 
+    stageIndex: null,
+    foodTarget: null,
+
     world: {
       wrapEdges: true,
       walls: [],

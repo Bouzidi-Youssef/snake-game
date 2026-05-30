@@ -1,7 +1,9 @@
-import { getState } from "./game.js";
-import { updateMovement } from "../systems/movement.js";
-import { checkCollision } from "../systems/collision.js";
+import { getState, setState } from "./game.js";
+import { MODES, GAME_STATUS } from "./constants.js";
+import { updateMovement, computeNextHead } from "../systems/movement.js";
+import { gameOver } from "../systems/collision.js";
 import { checkFood } from "../entities/food.js";
+import { saveStageProgress } from "./stage-loader.js";
 
 let lastTime = 0;
 let accumulator = 0;
@@ -49,7 +51,36 @@ function loop(currentTime) {
 }
 
 function tick() {
+  const state = getState();
+  if (state.status !== GAME_STATUS.RUNNING) return;
+
+  const newHead = computeNextHead(state);
+  if (wouldCollide(state, newHead)) {
+    gameOver(state);
+    return;
+  }
+
   updateMovement();
-  checkCollision();
   checkFood();
+  checkStageWin();
+}
+
+function wouldCollide(state, head) {
+  if (state.snake.some((seg, i) => i > 0 && seg.x === head.x && seg.y === head.y)) return true;
+  if (!state.world.wrapEdges) {
+    if (head.x < 0 || head.y < 0 || head.x >= state.cols || head.y >= state.rows) return true;
+  }
+  if (state.world?.walls?.some(w => w.x === head.x && w.y === head.y)) return true;
+  return false;
+}
+
+function checkStageWin() {
+  const state = getState();
+  if (state.mode !== MODES.STAGE) return;
+  if (state.status !== GAME_STATUS.RUNNING) return;
+  if (state.score < state.foodTarget) return;
+
+  stopLoop();
+  saveStageProgress(state.stageIndex + 1);
+  setState({ ...state, status: GAME_STATUS.STAGE_COMPLETE, food: null });
 }

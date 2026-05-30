@@ -42,7 +42,7 @@ function isObstacleCollision(state, head) {
   );
 }
 
-function gameOver(state) {
+export function gameOver(state) {
   const diff = state.difficulty;
   const currentHigh = state.highScore[diff] || 0;
   const newHighScore = {

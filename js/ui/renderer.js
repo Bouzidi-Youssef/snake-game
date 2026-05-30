@@ -1,6 +1,8 @@
-import { resetGame, updateState } from "../game/game.js";
+import { resetGame, updateState, loadStage } from "../game/game.js";
 import { startLoop, stopLoop } from "../game/loop.js";
-import { SCREENS, GAME_STATUS, DIFFICULTIES } from "../game/constants.js";
+import { SCREENS, GAME_STATUS, DIFFICULTIES, MODES } from "../game/constants.js";
+import { stages } from "../../stages/index.js";
+import { getStageProgress } from "../game/stage-loader.js";
 
 const CELL = 28;
 const COLS = 21;
@@ -113,12 +115,19 @@ function renderMenu(wrapper, state) {
     <div class="screen-inner">
       <div class="game-title"><span class="game-title-text">snake</span></div>
       <button class="btn btn-play">PLAY</button>
-      <button class="btn btn-stage" disabled>STAGE</button>
+      <button class="btn btn-stage">STAGE</button>
     </div>
   `;
 
   wrapper.querySelector(".btn-play").addEventListener("click", () => {
     updateState({ screen: SCREENS.LEVEL_SELECT });
+  });
+
+  wrapper.querySelector(".btn-stage").addEventListener("click", () => {
+    let idx = getStageProgress();
+    if (idx >= stages.length) idx = 0;
+    loadStage(idx, stages[idx]);
+    startLoop();
   });
 }
 
@@ -196,6 +205,29 @@ function buildGameBoard(container, wrapper, state) {
     board.appendChild(overlay);
   }
 
+  if (state.status === GAME_STATUS.STAGE_COMPLETE) {
+    const isLast = state.stageIndex >= stages.length - 1;
+    const overlay = document.createElement("div");
+    overlay.className = "stage-complete-overlay";
+    overlay.innerHTML = isLast
+      ? `<div class="stage-complete-title">ALL STAGES CLEARED!</div>
+         <div class="stage-complete-hint">Tap to return to menu</div>`
+      : `<div class="stage-complete-title">STAGE COMPLETE!</div>
+         <div class="stage-complete-hint">Tap to continue</div>`;
+    overlay.addEventListener("click", () => {
+      stopLoop();
+      if (isLast) {
+        updateState({ screen: SCREENS.MENU, status: GAME_STATUS.IDLE });
+      } else {
+        container.innerHTML = "";
+        const nextIdx = state.stageIndex + 1;
+        loadStage(nextIdx, stages[nextIdx]);
+        startLoop();
+      }
+    });
+    board.appendChild(overlay);
+  }
+
   wrapper.appendChild(board);
 
   const screenWrap = document.createElement("div");
@@ -204,10 +236,11 @@ function buildGameBoard(container, wrapper, state) {
 
   const hud = document.createElement("div");
   hud.className = "game-hud-strip";
-  hud.innerHTML = `
-    <span class="hud-score">${state.score}</span>
-    <span>${diffLabel.toUpperCase()}<span class="hud-highscore">${state.highScore[state.difficulty] || 0}</span></span>
-  `;
+  hud.innerHTML = state.mode === MODES.STAGE
+    ? `<span class="hud-score">${state.score}</span>
+       <span>Stage ${state.stageIndex + 1}/${stages.length}</span>`
+    : `<span class="hud-score">${state.score}</span>
+       <span>${diffLabel.toUpperCase()}<span class="hud-highscore">${state.highScore[state.difficulty] || 0}</span></span>`;
   screenWrap.appendChild(hud);
   container.appendChild(screenWrap);
 
@@ -248,15 +281,19 @@ function updateBoard(board, container, state) {
 
   // --- Food ---
   const oldFood = board.querySelector('.game-food');
-  const newLeft = `${state.food.x * CELL}px`;
-  const newTop  = `${state.food.y * CELL}px`;
-  if (!oldFood || oldFood.style.left !== newLeft || oldFood.style.top !== newTop) {
+  if (!state.food) {
     if (oldFood) oldFood.remove();
-    const foodEl = document.createElement("div");
-    foodEl.className = "game-food";
-    foodEl.style.left = newLeft;
-    foodEl.style.top  = newTop;
-    board.appendChild(foodEl);
+  } else {
+    const newLeft = `${state.food.x * CELL}px`;
+    const newTop  = `${state.food.y * CELL}px`;
+    if (!oldFood || oldFood.style.left !== newLeft || oldFood.style.top !== newTop) {
+      if (oldFood) oldFood.remove();
+      const foodEl = document.createElement("div");
+      foodEl.className = "game-food";
+      foodEl.style.left = newLeft;
+      foodEl.style.top  = newTop;
+      board.appendChild(foodEl);
+    }
   }
 
   // --- Pause overlay ---
@@ -289,7 +326,11 @@ function updateBoard(board, container, state) {
     `;
     el.querySelector(".btn-replay").addEventListener("click", () => {
       stopLoop();
-      resetGame(state.difficulty);
+      if (state.mode === MODES.STAGE) {
+        loadStage(state.stageIndex, stages[state.stageIndex]);
+      } else {
+        resetGame(state.difficulty);
+      }
       startLoop();
     });
     el.querySelector(".btn-menu").addEventListener("click", () => {
@@ -301,13 +342,41 @@ function updateBoard(board, container, state) {
     goOverlay.remove();
   }
 
+  // --- Stage-complete overlay ---
+  const scOverlay = board.querySelector('.stage-complete-overlay');
+  if (state.status === GAME_STATUS.STAGE_COMPLETE && !scOverlay) {
+    const isLast = state.stageIndex >= stages.length - 1;
+    const el = document.createElement("div");
+    el.className = "stage-complete-overlay";
+    el.innerHTML = isLast
+      ? `<div class="stage-complete-title">ALL STAGES CLEARED!</div>
+         <div class="stage-complete-hint">Tap to return to menu</div>`
+      : `<div class="stage-complete-title">STAGE COMPLETE!</div>
+         <div class="stage-complete-hint">Tap to continue</div>`;
+    el.addEventListener("click", () => {
+      stopLoop();
+      if (isLast) {
+        updateState({ screen: SCREENS.MENU, status: GAME_STATUS.IDLE });
+      } else {
+        container.innerHTML = "";
+        const nextIdx = state.stageIndex + 1;
+        loadStage(nextIdx, stages[nextIdx]);
+        startLoop();
+      }
+    });
+    board.appendChild(el);
+  } else if (state.status !== GAME_STATUS.STAGE_COMPLETE && scOverlay) {
+    scOverlay.remove();
+  }
+
   // --- HUD ---
   const hud = container.querySelector('.game-hud-strip');
   if (hud) {
-    hud.innerHTML = `
-      <span class="hud-score">${state.score}</span>
-      <span>${diffLabel.toUpperCase()}<span class="hud-highscore">${state.highScore[state.difficulty] || 0}</span></span>
-    `;
+    hud.innerHTML = state.mode === MODES.STAGE
+      ? `<span class="hud-score">${state.score}</span>
+         <span>Stage ${state.stageIndex + 1}/${stages.length}</span>`
+      : `<span class="hud-score">${state.score}</span>
+         <span>${diffLabel.toUpperCase()}<span class="hud-highscore">${state.highScore[state.difficulty] || 0}</span></span>`;
   }
 }
 
