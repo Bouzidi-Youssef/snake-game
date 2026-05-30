@@ -22,7 +22,7 @@ function handleKeyDown(e) {
 
   const key = e.key;
 
-  // Toggle Pause on Spacebar
+  // Toggle Pause on Spacebar, or advance on stage-complete
   if (key === " " || key === "Spacebar") {
     if (state.screen === SCREENS.GAME) {
       e.preventDefault();
@@ -36,6 +36,12 @@ function handleKeyDown(e) {
           ...state,
           status: GAME_STATUS.RUNNING,
         });
+      } else if (state.status === GAME_STATUS.STAGE_COMPLETE) {
+        const overlay = document.querySelector('.stage-complete-overlay');
+        if (overlay) overlay.click();
+      } else if (state.status === GAME_STATUS.GAMEOVER) {
+        const replay = document.querySelector('.btn-replay');
+        if (replay) replay.click();
       }
     }
     return;
