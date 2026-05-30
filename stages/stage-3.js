@@ -3,7 +3,7 @@ export default {
   label: 'Snake Pit',
   tickRate: 80,
   wrapEdges: false,
-  foodTarget: 8,
+  foodTarget: 4,
   snakeStart: { x: 3, y: 1},
   walls: [
     '#####################',
