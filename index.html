@@ -5,6 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Snake</title>
   <link rel="stylesheet" href="./styles/style.css" />
+
+  <!--
+    Inline scale bootstrap — runs synchronously before any DOM or CSS
+    is painted, so the first frame is already at the correct scale.
+    Mirrors computeScale() in renderer.js exactly.
+  -->
+  <script>
+    (function () {
+      var NATIVE_W      = 596;
+      var NATIVE_TOTAL_H = 478; // 428 container + 50 HUD
+      var PAD           = 12;
+
+      var vw    = window.innerWidth;
+      var vh    = window.innerHeight;
+      var scale = Math.min(1, (vw - PAD * 2) / NATIVE_W, (vh - PAD * 2) / NATIVE_TOTAL_H);
+
+      var visualH = NATIVE_TOTAL_H * scale;
+      var marginV = ((NATIVE_TOTAL_H - visualH) / 2) * -1;
+
+      // Write the two custom properties onto :root so the CSS default
+      // is already correct before the first paint.
+      document.documentElement.style.setProperty('--scale',          scale);
+      document.documentElement.style.setProperty('--scale-margin-v', marginV + 'px');
+    })();
+  </script>
 </head>
 <body>
   <main id="app"></main>

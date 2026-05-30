@@ -39,17 +39,25 @@ function computeScale() {
   return { scale, marginV };
 }
 
-/* Apply scale CSS custom properties to a .game-screen element */
+/* Apply scale to both :root (so CSS picks it up before JS renders)
+   and directly to the element for immediate effect.               */
 function applyScale(el) {
   const { scale, marginV } = computeScale();
-  el.style.setProperty('--scale',          scale);
-  el.style.setProperty('--scale-margin-v', `${marginV}px`);
+  const mv = `${marginV}px`;
+  // :root keeps the value available across screen transitions
+  document.documentElement.style.setProperty('--scale',          scale);
+  document.documentElement.style.setProperty('--scale-margin-v', mv);
+  // Also set on the element directly (specificity insurance)
+  if (el) {
+    el.style.setProperty('--scale',          scale);
+    el.style.setProperty('--scale-margin-v', mv);
+  }
 }
 
-// Re-apply scale on every resize (orientation change on mobile etc.)
+// Re-apply on resize / orientation change
 let _activeScreen = null;
 window.addEventListener('resize', () => {
-  if (_activeScreen) applyScale(_activeScreen);
+  applyScale(_activeScreen); // null-safe: sets :root even without an element
 });
 
 /* ── Main render entry ───────────────────────────────────────────────────── */
