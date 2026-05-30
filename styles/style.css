@@ -1,0 +1,344 @@
+@font-face {
+  font-family: 'Equilibrium';
+  src: url('../fonts/equilibrium.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: 100%;
+}
+
+/* ── Reset & Base ──────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --green-bg:   #9bba5a;
+  --green-dark: #272f16;
+  --cell:       28px;
+  --cols:       21;
+  --rows:       15;
+  --board-w:    588px; /* 21 × 28 */
+  --board-h:    420px; /* 15 × 28 */
+  --container-w: 596px; /* board + 4px border each side */
+  --container-h: 428px; /* board + 4px border each side */
+}
+
+body {
+  background: var(--green-bg);
+  font-family: 'Equilibrium', monospace;
+  color: var(--green-dark);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Outer page wrapper — always centers the container ── */
+#app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── The one fixed container ────────────────────── */
+.snake-game-container {
+  width:  var(--container-w);
+  height: var(--container-h);
+  border: 4px solid var(--green-dark);
+  background: var(--green-bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow:
+    inset 0 0 60px 0 rgba(170, 204, 102, 0.3),
+    0 6px 24px rgba(0, 0, 0, 0.18);
+  margin-bottom: 20px;
+}
+
+.game-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hud-spacer {
+  height: 36px;
+  flex-shrink: 0;
+}
+
+/* ── HUD strip — sits below the container ───────── */
+.game-hud-strip {
+  width: var(--container-w);
+  height: 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0px 2px 0;
+  font-size: 34px;
+  line-height: 36px;
+  color: var(--green-dark);
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.hud-score {
+  font-size: 34px;
+}
+
+.hud-highscore {
+  font-size: 34px;
+  margin-left: 20px;
+}
+
+/* ── Menu & Screens ─────────────────────────────── */
+.screen-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  gap: 0;
+}
+
+.game-title {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-family: 'Equilibrium', monospace;
+  font-size: 144px;
+  font-weight: normal;
+  line-height: 1;
+  color: var(--green-dark);
+  text-transform: lowercase;
+  justify-content: center;
+  margin: 54px 0 6px;
+  pointer-events: none;
+}
+
+.game-title-text {
+  margin-left: 15px;
+}
+
+.game-title::before,
+.game-title::after {
+  content: "";
+  width: var(--cell);
+  height: var(--cell);
+  background-image: url('/assets/images/food.svg');
+  background-size: 100% 100%;
+  opacity: 0.75;
+  flex-shrink: 0;
+  animation: spin 2s linear infinite;
+}
+
+.choose-label {
+  font-size: 34px;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn {
+  background: transparent;
+  border: none;
+  font-family: 'Equilibrium', monospace;
+  font-size: 28px;
+  color: var(--green-dark);
+  cursor: pointer;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 6px 20px;
+  transition: opacity 0.1s;
+  line-height: 1.5;
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.55;
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* level buttons on one row */
+.level-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  padding: 0 16px;
+  margin-top: 12px;
+}
+
+.level-cell {
+  height: 91px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.level-cell:nth-child(1) { width: 132.333px; }
+.level-cell:nth-child(2) { width: 161px; }
+.level-cell:nth-child(3) { width: 182.5px; }
+
+.level-cell:hover {
+  background: #272f16;
+}
+
+.level-cell:hover .btn-level {
+  color: var(--green-bg);
+  opacity: 1;
+}
+
+.btn-level {
+  display: inline-block;
+  font-family: 'Equilibrium', monospace;
+  font-size: 46px;
+  padding: 30px 14px 15px 18px;
+  line-height: 1;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-back {
+  display: block;
+  width: 161px;
+  margin: 20px auto 0;
+  font-size: 18px;
+  opacity: 0.65;
+}
+
+.btn-back:hover {
+  opacity: 0.4;
+}
+
+.btn-play,
+.btn-stage {
+  font-size: 46px;
+  padding: 30px 14px 15px 18px;
+  line-height: 1;
+  border-radius: 8px;
+}
+
+/* gameover buttons row */
+.gameover-btns {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.gameover-title {
+  font-size: 44px;
+  margin-bottom: 14px;
+  letter-spacing: 2px;
+}
+
+.gameover-score {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.gameover-score-value {
+  font-size: 26px;
+}
+
+.gameover-highscore {
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+/* ── Game Board ──────────────────────────────────── */
+.game-board {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width:  var(--board-w);
+  height: var(--board-h);
+  overflow: hidden;
+}
+
+/* ── Snake segments ──────────────────────────────── */
+.snake-segment {
+  position: absolute;
+  width:  var(--cell);
+  height: var(--cell);
+  border-radius: 8px;
+  background: var(--green-dark);
+}
+
+/* ── Food ────────────────────────────────────────── */
+@keyframes appear {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 0.75; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+.game-food {
+  position: absolute;
+  width:  var(--cell);
+  height: var(--cell);
+  background-image: url('/assets/images/food.svg');
+  background-size: 100% 100%;
+  opacity: 0.75;
+  animation:
+    appear 200ms cubic-bezier(0.5, 1, 0, 1.6),
+    spin   3.5s  cubic-bezier(0.2, 0.6, 0.4, 1) 200ms;
+  animation-play-state: running, running;
+}
+
+/* ── Walls ───────────────────────────────────────── */
+.game-wall {
+  position: absolute;
+  width:  var(--cell);
+  height: var(--cell);
+  background: var(--green-dark);
+  opacity: 0.5;
+  border-radius: 4px;
+}
+
+/* ── Overlays ─────────────────────────────────────── */
+.pause-overlay,
+.gameover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(155, 186, 90, 0.82);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.pause-text {
+  font-size: 48px;
+  letter-spacing: 4px;
+}
+
+.pause-hint {
+  font-size: 16px;
+  opacity: 0.7;
+  margin-top: 8px;
+}
