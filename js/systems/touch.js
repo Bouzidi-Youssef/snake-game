@@ -8,18 +8,13 @@ export function initTouch(container) {
   let startX = 0;
   let startY = 0;
   let startTime = 0;
-  let onBoard = false;
+  let tracking = false;
 
   container.addEventListener("touchstart", (e) => {
-    onBoard = !!e.target.closest(".game-board");
-    if (!onBoard) return;
-
     const state = getState();
-    if (state.screen !== SCREENS.GAME || state.status === GAME_STATUS.GAMEOVER) {
-      onBoard = false;
-      return;
-    }
+    if (state.screen !== SCREENS.GAME || state.status === GAME_STATUS.GAMEOVER) return;
 
+    tracking = true;
     const t = e.touches[0];
     startX = t.clientX;
     startY = t.clientY;
@@ -28,14 +23,13 @@ export function initTouch(container) {
   }, { passive: false });
 
   container.addEventListener("touchmove", (e) => {
-    const state = getState();
-    if (state.screen === SCREENS.GAME && state.status !== GAME_STATUS.GAMEOVER) {
-      e.preventDefault();
-    }
+    if (!tracking) return;
+    e.preventDefault();
   }, { passive: false });
 
   container.addEventListener("touchend", (e) => {
-    if (!onBoard) return;
+    if (!tracking) return;
+    tracking = false;
 
     const state = getState();
     if (state.screen !== SCREENS.GAME) return;
