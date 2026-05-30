@@ -330,6 +330,7 @@ body {
   height: var(--board-h);
   overflow: hidden;
   z-index: 1;
+  touch-action: none;
 }
 
 /* ── Snake segments ──────────────────────────────── */
